@@ -1,22 +1,18 @@
-# ---- Build stage: use Maven + JDK 17 to build the app ----
-FROM maven:3.9.5-eclipse-temurin-17 AS build
+# ---- Build Stage ----
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-# Copy everything into the container
-COPY . .
+COPY pom.xml .
+COPY src ./src
 
-# Build the jar (skip tests to be faster)
 RUN mvn -q -DskipTests package
 
-# ---- Run stage: smaller image with just JDK ----
-FROM eclipse-temurin:17-jdk-alpine
+# ---- Run Stage ----
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Copy the jar from the build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/target/knight-life-0.0.1-SNAPSHOT.jar app.jar
 
-# Spring Boot runs on 8080 inside the container
-EXPOSE 8080
+EXPOSE 8081
 
-# Start the app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
